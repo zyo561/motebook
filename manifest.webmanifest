@@ -1,0 +1,27 @@
+{
+  "name": "墨匣 · 小说码字工具",
+  "short_name": "墨匣",
+  "description": "个人小说写作工具：书架、目录、正文、世界观、伏笔追踪，数据全部保存在本机。",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "motebook-writer",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#f7f6f3",
+  "theme_color": "#5c7a4e",
+  "categories": ["productivity", "books"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "我的作品", "short_name": "作品", "url": "./index.html?go=mine", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "继续写作", "short_name": "写作", "url": "./index.html?go=write", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}
