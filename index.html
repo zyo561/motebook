@@ -55,7 +55,6 @@
   --editor-font:"Songti SC","STSong",SimSun,serif;
   --editor-fs:19px;
   --editor-lh:1.85;
-  --br:100%;
   --toc-w:312px;
   --rail-w:74px;
 }
@@ -91,7 +90,13 @@ button{background:none; border:none; padding:0; cursor:pointer}
 ::selection{background:rgba(255,106,43,.2)}
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
 [hidden]{display:none !important}
-.app{height:100vh; display:flex; flex-direction:column; filter:brightness(var(--br)); overflow:hidden}
+/* 亮度：暗用遮罩压暗、亮用白罩提亮 —— 不用 filter，避免整页重绘拖慢触屏响应 */
+.bright-dim{
+  position:fixed; inset:0; z-index:200; pointer-events:none; display:none;
+}
+.mode-darken .bright-dim{display:block; background:#0d0b09; opacity:var(--dim,0)}
+.mode-lighten .bright-dim{display:block; background:#ffffff; opacity:var(--light,0)}
+.app{height:100vh; display:flex; flex-direction:column; overflow:hidden; position:relative}
 .spacer{flex:1}
 
 /* ============================ 通用按钮 ============================ */
@@ -388,7 +393,12 @@ svg.stroke{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:roun
 .mine-empty{padding:56px 20px; text-align:center; color:var(--muted); font-size:13px; line-height:2}
 .mine-empty .ic{font-size:32px; opacity:.35; display:block; margin-bottom:10px}
 .mine-foot{flex:0 0 auto; padding:12px 18px; border-top:1px solid var(--line)}
-.mine-foot .btn{width:100%}
+.mine-foot{display:flex; gap:10px}
+.mine-foot .btn{flex:1}
+.mine-tip{
+  flex:0 0 auto; padding:10px 20px 0; font-size:11.5px; color:var(--faint);
+  line-height:1.7; text-align:center;
+}
 .mine-stat{
   display:flex; gap:10px; padding:0 16px 4px; font-size:11.5px; color:var(--muted);
 }
@@ -445,10 +455,18 @@ svg.stroke{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:roun
 .ws-right{margin-left:auto; display:flex; align-items:center; gap:8px}
 .pill-btn{
   height:31px; padding:0 13px; border-radius:20px; font-size:12.5px; color:var(--text-2);
-  border:1px solid var(--line-2); display:inline-flex; align-items:center; gap:6px; transition:all .16s;
+  border:1px solid var(--line-2); display:inline-flex; align-items:center; gap:6px;
+  white-space:nowrap; flex:0 0 auto; transition:all .16s;
 }
 .pill-btn:hover{border-color:var(--faint); background:var(--surface-3); color:var(--text)}
-.pill-btn svg{width:14px; height:14px}
+.pill-btn svg{width:14px; height:14px; flex:0 0 auto}
+/* 窄屏顶栏：文字按钮缩紧，别折行 */
+@media (max-width:700px){
+  .ws-top{gap:6px}
+  .pill-btn{padding:0 10px; font-size:12px}
+  .ws-title{max-width:32vw; font-size:13.5px}
+  .ws-sub{font-size:11px}
+}
 
 .main{flex:1; min-height:0; display:flex; flex-direction:column; position:relative; overflow:hidden}
 .tabpane{display:none; flex:1; min-height:0; flex-direction:column}
@@ -460,15 +478,15 @@ svg.stroke{fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:roun
 .write-inner{max-width:920px; margin:0 auto; padding:32px 46px 220px}
 .ch-title{
   width:100%; border:none; background:transparent; font-family:"Songti SC","STSong",Georgia,serif;
-  font-size:26px; font-weight:700; color:inherit; padding:2px 0 12px;
+  font-size:clamp(20px, 3.4vw, 26px); font-weight:700; color:inherit; padding:2px 0 12px;
 }
 .ch-title:focus{outline:none}
 .ch-title::placeholder{color:var(--faint)}
 .ch-meta-line{display:flex; align-items:center; gap:12px; font-size:12px; color:var(--muted); margin-bottom:20px}
 .ch-meta-line .rule{width:34px; height:2px; border-radius:2px; background:var(--accent); opacity:.75}
 .editor{
-  outline:none; font-family:var(--editor-font); font-size:var(--editor-fs); line-height:var(--editor-lh);
-  white-space:pre-wrap; word-break:break-word; caret-color:var(--accent); min-height:360px; color:inherit;
+  outline:none; font-family:var(--editor-font); font-size:var(--editor-fs, 19px); line-height:var(--editor-lh);
+  white-space:pre-wrap; word-break:break-word; caret-color:var(--accent); min-height:clamp(240px, 42vh, 400px); color:inherit;
 }
 .editor:empty::before{content:attr(data-placeholder); color:var(--faint); pointer-events:none}
 .editor p{margin:0 0 .42em}
@@ -649,8 +667,8 @@ input[type=range]::-moz-range-thumb{width:15px; height:15px; border-radius:50%; 
 .ops-row{display:flex; gap:10px; flex-wrap:wrap}
 
 /* ============================ 底部导航 ============================ */
-.dock{flex:0 0 auto; display:flex; align-items:center; justify-content:center; gap:8px; padding:9px 16px; background:var(--surface); border-top:1px solid var(--line); z-index:20}
-.dock-btn{display:inline-flex; align-items:center; gap:7px; height:36px; padding:0 20px; border-radius:20px; font-size:13.5px; color:var(--text-2); transition:all .16s}
+.dock{flex:0 0 auto; display:flex; align-items:center; justify-content:center; gap:6px; padding:9px 10px; background:var(--surface); border-top:1px solid var(--line); z-index:20}
+.dock-btn{display:inline-flex; align-items:center; gap:6px; height:36px; padding:0 16px; border-radius:20px; font-size:13.5px; color:var(--text-2); white-space:nowrap; flex:0 0 auto; transition:all .16s}
 .dock-btn:hover{background:var(--surface-3); color:var(--text)}
 .dock-btn.active{background:var(--green-soft); color:var(--green-deep); font-weight:600}
 :root[data-theme="dark"] .dock-btn.active{color:#a9c79b}
@@ -820,92 +838,153 @@ input[type=range]::-moz-range-thumb{width:15px; height:15px; border-radius:50%; 
 *::-webkit-scrollbar-thumb:hover{background:rgba(120,112,98,.55); background-clip:content-box}
 *::-webkit-scrollbar-track{background:transparent}
 
-@media (max-width:1080px){
-  .shelf-inner{padding:24px 24px 0; gap:16px}
-  .book-card .cover-wrap{flex-basis:152px; padding:20px 0 20px 20px}
-  .book-card .cover{width:116px}
-}
-@media (max-width:820px){
-  :root{--rail-w:60px}
-  .shelf-inner{flex-direction:column; padding:20px 18px 0}
-  .rail{flex-direction:row; position:static; width:100%}
-  .rail-books{flex-direction:row}
-  .form-grid{grid-template-columns:1fr 1fr}
-  .write-inner{padding:22px 20px 170px}
-  .chars-side{flex-basis:176px}
-}
 
-/* ====================== iPad / 触屏适配 ====================== */
+/* ====================== 响应式与触屏（流体尺寸，不靠猜宽度） ====================== */
 :root{
   --safe-t:env(safe-area-inset-top,0px);
   --safe-r:env(safe-area-inset-right,0px);
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-l:env(safe-area-inset-left,0px);
+  /* 流体尺度：按实测 iPad 视口（竖屏 526、横屏 808 起）标定 */
+  --pad-x:clamp(15px, 3.4vw, 40px);
+  --greet-fs:clamp(21px, 3.6vw, 29px);
+  --card-cover:clamp(84px, 14vw, 134px);
+  --card-title:clamp(16px, 2.2vw, 21px);
+  --card-pad:clamp(14px, 2.2vw, 28px);
 }
 html{-webkit-text-size-adjust:100%}
 body{overscroll-behavior:none}
-button,.btn,.rail-btn,.icon-btn,.circle-btn,.dock-btn,.tab,.wtab,.sort-chip,.st-pill,.chip{
-  -webkit-tap-highlight-color:transparent; touch-action:manipulation;
+.shelf-inner{padding-left:max(var(--pad-x), var(--safe-l)); padding-right:max(var(--pad-x), var(--safe-r))}
+.greet h2{font-size:var(--greet-fs); gap:8px}
+.greet p{font-size:clamp(12px, 1.5vw, 13px)}
+.book-card .cover{width:var(--card-cover)}
+.book-card .cover-wrap{flex:0 0 auto; padding:var(--card-pad) 0 var(--card-pad) var(--card-pad)}
+.book-card .body{padding:var(--card-pad) var(--card-pad) calc(var(--card-pad) + 46px) calc(var(--card-pad) * .6)}
+.book-card .body .bt{font-size:var(--card-title); margin-bottom:clamp(5px, 1vw, 10px)}
+.book-card .body .bs{font-size:clamp(11.5px, 1.4vw, 12.5px)}
+.book-card .body .intro{font-size:clamp(11.5px, 1.4vw, 12.5px); margin-top:clamp(5px, 1vw, 11px)}
+.book-card .body .upd{font-size:clamp(11.5px, 1.4vw, 12.5px); padding-top:clamp(6px, 1.2vw, 12px)}
+.book-card{min-height:clamp(150px, 22vw, 206px)}
+.book-card .acts{right:clamp(12px, 2vw, 22px); bottom:clamp(12px, 2vw, 22px); gap:clamp(7px, 1.4vw, 11px)}
+.new-card{min-height:clamp(110px, 16vw, 154px)}
+.mine{width:min(92vw, 430px)}
+.toc{width:min(90vw, var(--toc-w))}
+.mine-scroll,.toc-scroll,.write-scroll,.pad,.settings-scroll,.rt-editor,.char-detail,.shelf-scroll{
+  touch-action:pan-y; -webkit-overflow-scrolling:touch;
 }
-.toc,.mine{-webkit-overflow-scrolling:touch}
-
-/* 触屏设备：用手指点，所以要更大的热区 */
-@media (hover:none) and (pointer:coarse){
-  .btn{height:38px; padding:0 17px; font-size:14px}
-  .btn.sm{height:32px; padding:0 13px; font-size:13px}
-  .icon-btn{width:38px; height:38px; border-radius:11px}
-  .icon-btn svg{width:19px; height:19px}
-  .rail-btn{width:46px; height:46px}
-  .rail-btn svg{width:22px; height:22px}
-  .dock-btn{height:42px; padding:0 22px; font-size:14px}
-  .tab,.wtab{height:38px; padding:0 17px; font-size:14px}
-  .sort-chip{height:34px; padding:0 16px; font-size:13.5px}
-  .circle-btn{width:44px; height:44px}
-  .circle-btn svg{width:19px; height:19px}
-  .circle-btn.write{width:62px; height:62px}
-  .circle-btn.write svg{width:26px; height:26px}
-  .caret{width:26px; height:26px}
-  .caret svg{width:13px; height:13px}
-  .vol-row{padding:9px 6px 9px 4px}
-  .chap-row{padding:9px 8px 9px 12px}
-  .vol-name,.chap-name{font-size:14.5px}
-  .row-acts{opacity:1}                     /* 手指没有 hover，操作按钮常显 */
-  .book-card .more,.book-card .cover .cv-edit{opacity:1}
-  .mine-item .mi-acts{opacity:1}
-  .mine-item .mi-go{opacity:0}             /* 亮蓝色提示条在触屏上没必要，省空间 */
-  .slot .del{display:flex}
-  .slot .nm{display:block}
-  .empty-state{padding:52px 22px 48px}
-  .btn-ink{height:50px; padding:0 34px; font-size:16px}
-  .toast{font-size:14.5px; padding:11px 22px}
-  .modal-head .btn{font-size:16px; padding:2px 6px}
-  .m-field input[type=text],.m-field textarea{font-size:16px}  /* ≥16px 避免 iOS 聚焦缩放 */
-  input,select,textarea{font-size:16px}
-  .m-field .lb{font-size:14px}
-  .set-row > label{font-size:14px}
-  .switch{font-size:14px}
+/* 触屏：干掉 iOS 的 300ms 点击延迟与双击缩放，并给出按下反馈 */
+button,.btn,.rail-btn,.icon-btn,.circle-btn,.dock-btn,.pill-btn,.tab,.wtab,.sort-chip,.st-pill,
+.book-card,.mine-item,.chap-row,.vol-row,.char-chip,.slot,.new-card,.rail-book,.theme-tile,.swatch,.link-like{
+  cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none; user-select:none;
+}
+.btn:active,.pill-btn:active,.sort-chip:active{transform:scale(.96)}
+.icon-btn:active,.rail-btn:active{transform:scale(.88)}
+.circle-btn:active{transform:scale(.9)}
+.book-card:active{transform:translateY(-1px) scale(.995)}
+.mine-item:active{background:var(--surface-3)}
+.chap-row:active,.vol-row:active{background:var(--surface-3)}
+.swatch:active,.theme-tile:active{transform:scale(.97)}
+/* 触屏判定（比宽度判定更准）：加大热区、常显关键操作 */
+:root.is-touch .btn{height:38px; padding:0 16px; font-size:14px}
+:root.is-touch .btn.sm{height:33px; padding:0 13px; font-size:13px}
+:root.is-touch .icon-btn{width:38px; height:38px; border-radius:11px}
+:root.is-touch .icon-btn svg{width:19px; height:19px}
+:root.is-touch .rail-btn{width:46px; height:46px}
+:root.is-touch .rail-btn svg{width:22px; height:22px}
+:root.is-touch .dock-btn{height:42px; padding:0 15px; font-size:13.5px; gap:6px; white-space:nowrap}
+:root.is-touch .tab,:root.is-touch .wtab{height:38px; padding:0 16px; font-size:14px}
+:root.is-touch .sort-chip{height:34px; padding:0 15px; font-size:13.5px}
+:root.is-touch .caret{width:26px; height:26px}
+:root.is-touch .caret svg{width:13px; height:13px}
+:root.is-touch .row-acts{opacity:1; gap:3px}
+:root.is-touch .row-acts .icon-btn{width:34px; height:34px}
+:root.is-touch .row-acts .icon-btn svg{width:17px; height:17px}
+:root.is-touch .book-card .more,:root.is-touch .book-card .cover .cv-edit{opacity:1}
+:root.is-touch .mine-item .mi-acts{opacity:1}
+:root.is-touch .mine-item .mi-go{opacity:0}
+:root.is-touch .slot .del{display:flex}
+:root.is-touch .slot .nm{display:block}
+:root.is-touch .empty-state{padding:clamp(34px, 6vw, 52px) 22px clamp(32px, 6vw, 48px)}
+:root.is-touch .btn-ink{height:clamp(46px, 7vw, 52px); padding:0 clamp(24px, 5vw, 34px); font-size:clamp(15px, 2vw, 16.5px)}
+:root.is-touch .toast{font-size:14.5px; padding:11px 22px; max-width:88vw}
+/* ≥16px 可避免 iOS 聚焦时页面被放大（章节标题等标题类输入框除外，它们要按流体字号） */
+:root.is-touch input:not(.ch-title):not(.name-input),:root.is-touch select,:root.is-touch textarea,
+:root.is-touch .m-field input[type=text],:root.is-touch .m-field textarea{font-size:16px}
+:root.is-touch .m-field .lb,:root.is-touch .set-row > label,:root.is-touch .switch{font-size:14px}
+:root.is-touch .field label{font-size:12.5px}
+/* 窄视口（实测 iPad 竖屏 526px）：抽屉按比例收窄，树行紧凑 */
+@media (max-width:620px){
+  .toc{width:min(86vw, 340px)}
+  .mine{width:min(94vw, 380px)}
+  :root.is-touch .row-acts .icon-btn{width:30px; height:30px}
+  :root.is-touch .row-acts .icon-btn svg{width:15px; height:15px}
+  .vol-name{font-size:13px} .chap-name{font-size:12.5px}
+  .vol-count,.chap-wc{font-size:10.5px}
+  .toc-foot{gap:7px; padding:9px 10px}
+  :root.is-touch .toc-foot .btn{height:36px; padding:0 10px; font-size:13px}
+  .toc-head{padding:13px 10px 11px 16px}
+  .mine-tools{padding:12px 14px 10px}
+  .mine-scroll{padding:10px 12px 16px}
+  .mine-item{padding:10px; gap:11px}
+  .mine-item .mc{width:52px; height:70px; font-size:10.5px}
+  .mine-item .mi-t{font-size:14px}
+  .modal{border-radius:16px}
+  .modal-body{padding:16px 16px 4px}
+  /* 色板与主题卡在窄屏改为两列/紧凑，避免一片臃肿 */
+  .swatches{gap:9px}
+  .swatch{width:46px; height:46px; border-radius:11px}
+  .swatch .nm{font-size:9.5px}
+  .theme-tiles{gap:9px}
+  .theme-tile{min-width:0; flex:1 1 46%; padding:12px}
+  .set-row{padding:9px 0}
+  .chars-side{flex-basis:132px}
+}
+/* 竖屏：右侧竖排栏改成横向平铺到问候语下方 */
+@media (max-aspect-ratio:1/1){
+  .shelf-inner{flex-direction:column; gap:12px; padding-top:18px; padding-bottom:10px}
+  .shelf-header{flex-direction:column; align-items:stretch; gap:13px; margin-bottom:16px}
+  .shelf-head-right{margin-left:0; padding-top:0}
+  .shelf-head-right .btn{flex:1; justify-content:center; height:40px}
+  .rail{flex-direction:row; position:static; width:100%; flex:0 0 auto; gap:8px; padding:0; align-self:auto; align-items:center}
+  .rail .spacer{display:none}
+  .rail-books{flex-direction:row; margin-left:auto; gap:8px}
+  .rail-sep{width:1px; height:22px; margin:0 2px}
+  .rail-book{width:40px; height:54px}
+  .book-list{gap:14px}
+  .book-card .body .intro{-webkit-line-clamp:1}
+  .empty-state h3{font-size:19px}
+  .empty-state p{font-size:12.5px; line-height:1.85}
+  .write-inner{padding:20px 18px 44px}
+  .statusbar{gap:11px; padding:0 12px; font-size:11.5px}
+  .chars-side{flex-basis:150px}
+  .form-grid{grid-template-columns:1fr 1fr}
+  .settings-scroll{padding:16px 14px 60px}
+  .set-card{padding:16px 15px}
+  .set-row{flex-wrap:wrap; gap:8px}
+  .set-row > label{flex:0 0 auto; min-width:62px}
+  .ws-sub{padding:0 12px}
+}
+/* 大屏（横屏 iPad / 电脑）：放宽阅读区，三栏布局 */
+@media (min-width:1100px){
+  .shelf-inner{max-width:1180px}
+  .toc{width:var(--toc-w)}
+  .mine{width:440px}
+  .write-inner{max-width:940px}
 }
 /* 安全区：刘海 / 圆角 / Home 条 */
 @media (display-mode:standalone),(display-mode:fullscreen){
-  #view-workspace .ws-top{padding-top:var(--safe-t); height:calc(54px + var(--safe-t))}
-  #view-workspace .dock{padding-bottom:calc(9px + var(--safe-b))}
+  .ws-top{padding-top:var(--safe-t); height:calc(54px + var(--safe-t))}
+  .dock{padding-bottom:calc(9px + var(--safe-b))}
   .statusbar{padding-bottom:var(--safe-b); height:calc(36px + var(--safe-b))}
-  #view-shelf .shelf-inner{padding-left:calc(40px + var(--safe-l)); padding-right:calc(40px + var(--safe-r))}
-  .toc{padding-top:var(--safe-t); padding-left:var(--safe-l)}
-  .mine{padding-top:var(--safe-t); padding-right:var(--safe-r)}
+  .toc{padding-top:var(--safe-t)}
+  .mine{padding-top:var(--safe-t)}
   .toc-foot{padding-bottom:calc(11px + var(--safe-b))}
   .mine-foot{padding-bottom:calc(12px + var(--safe-b))}
+  .shelf-scroll{padding-bottom:calc(40px + var(--safe-b))}
 }
-/* 竖屏 iPad / 窄屏：抽屉改成整屏宽度，更好点 */
-@media (max-width:900px){
-  .toc{width:min(100%,420px)}
-  .mine{width:min(100%,460px)}
-}
-@media (max-width:700px){
-  .type-chip{display:none}
-  .write-inner .ch-title{font-size:22px}
-  .statusbar{gap:12px; padding:0 14px}
-  .statusbar #sb-speed-wrap{display:none !important}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important; animation-delay:0ms !important; transition-duration:.06s !important}
 }
 </style>
 </head>
@@ -953,7 +1032,7 @@ button,.btn,.rail-btn,.icon-btn,.circle-btn,.dock-btn,.tab,.wtab,.sort-chip,.st-
           <span class="rail-sep"></span>
           <div class="rail-books" id="rail-books"></div>
           <span class="spacer"></span>
-          <button class="rail-btn rail-more" id="rail-more" title="更多">
+          <button class="rail-btn rail-more" id="rail-more" data-nomenu title="更多">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
           </button>
         </aside>
@@ -984,7 +1063,9 @@ button,.btn,.rail-btn,.icon-btn,.circle-btn,.dock-btn,.tab,.wtab,.sort-chip,.st-
         </div>
       </div>
       <div class="mine-scroll" id="mine-list"></div>
+      <div class="mine-tip">内容只存在本机 · 建议每周「导出备份」存到「文件」App</div>
       <div class="mine-foot">
+        <button class="btn" id="btn-mine-export" title="把所有作品导出成一个备份文件，存到「文件」App 里">导出备份</button>
         <button class="btn primary" id="btn-mine-new">＋ 新建作品</button>
       </div>
     </aside>
@@ -1005,7 +1086,7 @@ button,.btn,.rail-btn,.icon-btn,.circle-btn,.dock-btn,.tab,.wtab,.sort-chip,.st-
         <button class="pill-btn" id="btn-export-book">
           <svg viewBox="0 0 24 24" class="stroke"><path d="M12 4v11M8 11l4 4 4-4M5 19h14"/></svg>导出
         </button>
-        <button class="icon-btn" id="btn-ws-more" title="更多操作">
+        <button class="icon-btn" id="btn-ws-more" data-nomenu title="更多操作">
           <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
         </button>
       </div>
@@ -1240,6 +1321,7 @@ button,.btn,.rail-btn,.icon-btn,.circle-btn,.dock-btn,.tab,.wtab,.sort-chip,.st-
 </div>
 
 <div id="modal-root"></div>
+<div class="bright-dim" id="bright-dim"></div>
 <div id="ctx-root"></div>
 <div class="toasts" id="toasts"></div>
 <input type="file" id="file-image" accept="image/*" hidden>
@@ -1619,10 +1701,10 @@ function applySettingsToUI() {
     app.style.setProperty('--editor-bg', s.bgColor);
     app.style.setProperty('--editor-fg', s.textColor);
     app.style.setProperty('--editor-font', fontStack(s.fontFamily));
-    app.style.setProperty('--editor-fs', s.fontSize + 'px');
+    app.style.setProperty('--editor-fs', 'clamp(' + Math.max(14, s.fontSize - 3) + 'px, ' + (s.fontSize / 9).toFixed(2) + 'vw + 8px, ' + s.fontSize + 'px)');
     app.style.setProperty('--editor-lh', String(s.lineHeight));
-    app.style.setProperty('--br', s.brightness + '%');
   }
+  applyBrightness(num(A(s.brightness, 100)));
   const ed = q('#editor');
   if (ed) ed.classList.toggle('indent', !!s.indent);
   const show = !!s.showWordCount;
@@ -1630,6 +1712,17 @@ function applySettingsToUI() {
     const el = q(sel); if (el && el.parentElement) el.parentElement.style.display = show ? '' : 'none';
   });
   const hint = q('#ch-word-hint'); if (hint) hint.style.display = show ? '' : 'none';
+}
+/* 亮度：100 = 原样；调暗用黑罩，调亮用白罩（都只是盖一层，不触发整页重绘） */
+function applyBrightness(v) {
+  v = clamp(num(v) || 100, 60, 140);
+  const de = document.documentElement;
+  const darken = v < 100 ? (100 - v) / 100 * 0.6 : 0;
+  const lighten = v > 100 ? (v - 100) / 100 * 0.35 : 0;
+  de.style.setProperty('--dim', darken.toFixed(3));
+  de.style.setProperty('--light', lighten.toFixed(3));
+  de.classList.toggle('mode-darken', darken > 0.001);
+  de.classList.toggle('mode-lighten', lighten > 0.001);
 }
 /* 界面主题是全局偏好：回到书架时保持暗色，不再突然变白 */
 function syncUiTheme(theme) {
@@ -2972,6 +3065,7 @@ q('#rail-mine').addEventListener('click', openMine);
 q('#btn-mine-close').addEventListener('click', closeMine);
 q('#mine-scrim').addEventListener('click', closeMine);
 q('#btn-mine-new').addEventListener('click', () => { closeMine(); createBookDialog(); });
+q('#btn-mine-export').addEventListener('click', () => { exportAll(); });
 q('#mine-search').addEventListener('input', function () {
   mineState.q = this.value;
   clearTimeout(this._t);
@@ -3007,11 +3101,11 @@ q('#rail-more').addEventListener('click', e => {
   const r = e.currentTarget.getBoundingClientRect();
   ctxMenu(r.left - 170, r.top, [
     { i: 'new', icon: ICON.plus, label: '新建作品', fn: createBookDialog },
+    { i: 'mine', icon: ICON.doc, label: '我的作品（搜索 / 排序）', fn: openMine },
     { i: 'stats', icon: ICON.chart, label: '数据统计', fn: showStatsDialog },
     { sep: true },
-    { i: 'io', icon: ICON.down, label: '导入 / 导出', fn: () => showIO(false) },
-    { i: 'all', icon: ICON.copy, label: '导出全部数据', fn: exportAll },
-    { i: 'imp', icon: ICON.down, label: '导入数据', fn: importFile }
+    { i: 'backup', icon: ICON.down, label: '导出备份（存到「文件」）', fn: exportAll },
+    { i: 'imp', icon: ICON.down, label: '导入备份', fn: importFile }
   ]);
 });
 q('#btn-export-book').addEventListener('click', () => showIO(true));
@@ -3159,8 +3253,12 @@ treeEl.addEventListener('drop', e => {
   moveChapter(id, volId, before);
   renderTree();
 });
-/* --- 遮罩点击关闭右键菜单 --- */
-document.addEventListener('click', e => { if (!e.target.closest('.ctx-menu')) closeCtx(); });
+/* --- 点击别处收起右键菜单（打开菜单的按钮本身要放行，否则菜单会被同一次点击立刻关掉） --- */
+document.addEventListener('click', e => {
+  if (e.target.closest('.ctx-menu')) return;
+  if (e.target.closest('[data-nomenu]')) return;
+  closeCtx();
+});
 
 /* --- 全局点击委托 --- */
 document.addEventListener('click', e => {
@@ -3315,10 +3413,16 @@ document.addEventListener('keydown', e => {
     return addChapter();
   }
 });
-/* ===== 触屏：长按 = 右键菜单，长按文字可选择复制 ===== */
+/* ===== 触屏判定：给 <html> 打标记，供 CSS 精确匹配（比 pointer 媒体查询可靠） ===== */
 const IS_TOUCH = (function () {
-  try { return window.matchMedia('(hover:none) and (pointer:coarse)').matches || 'ontouchstart' in window; } catch (e) { return false; }
+  try {
+    if (navigator.maxTouchPoints > 0) return true;
+    if ('ontouchstart' in window) return true;
+    return window.matchMedia('(hover:none) and (pointer:coarse)').matches;
+  } catch (e) { return false; }
 })();
+try { document.documentElement.classList.toggle('is-touch', IS_TOUCH); } catch (e) { }
+
 let _lpTimer = 0, _lpStart = null, _lpEl = null, _lpFired = false;
 function bindLongPress() {
   if (!IS_TOUCH) return;
@@ -3402,6 +3506,40 @@ function initPWA() {
   }, 1400);
 }
 
+/* ===== 自检面板：地址后加 ?diag=1 打开，用于真机排查排版 ===== */
+function initDiag() {
+  if (!/[?&]diag=1/.test(location.search)) return;
+  const m = () => {
+    const px = s => { const e = q(s); if (!e) return '-'; const r = e.getBoundingClientRect(); return Math.round(r.width) + 'x' + Math.round(r.height); };
+    const mq = (s) => { try { return window.matchMedia(s).matches ? 'Y' : 'n'; } catch (e) { return '?'; } };
+    return [
+      '视口 innerWidth × innerHeight = ' + window.innerWidth + ' × ' + window.innerHeight,
+      'devicePixelRatio = ' + window.devicePixelRatio,
+      'screen = ' + screen.width + ' × ' + screen.height + '  avail ' + screen.availWidth + ' × ' + screen.availHeight,
+      '屏幕方向 = ' + (screen.orientation ? screen.orientation.type : (window.innerWidth > window.innerHeight ? 'landscape' : 'portrait')),
+      'standalone(独立App) = ' + mq('(display-mode: standalone)') + '   触屏 = ' + mq('(hover:none) and (pointer:coarse)'),
+      'dpr可用变量 100dvh = ' + (window.visualViewport ? Math.round(window.visualViewport.width) + ' × ' + Math.round(window.visualViewport.height) + ' / scale ' + window.visualViewport.scale.toFixed(2) : '无'),
+      '———————— 关键区块实测 ————————',
+      '问候标题 = ' + px('#greet-text') + '   操作按钮 = ' + px('#btn-shelf-new'),
+      '作品卡 = ' + px('.book-card') + '   右侧栏 = ' + px('.rail'),
+      '首页内边距 = ' + (q('.shelf-inner') ? getComputedStyle(q('.shelf-inner')).padding : '-'),
+      '目录抽屉 = ' + px('#toc') + '   我的面板 = ' + px('#mine'),
+      '顶栏按钮 = ' + px('#btn-toc') + '   底部导航 = ' + px('.dock'),
+      '状态栏 = ' + px('.statusbar')
+    ].join('\n');
+  };
+  const box = document.createElement('pre');
+  box.id = 'diagbox';
+  box.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:9999;margin:0;padding:12px 14px;' +
+    'background:rgba(20,18,14,.94);color:#fff;font:12px/1.75 ui-monospace,Menlo,monospace;white-space:pre-wrap;pointer-events:none';
+  document.body.appendChild(box);
+  const draw = () => { box.textContent = '【排版自检】把这一屏截图发给开发者\n' + m(); };
+  draw();
+  window.addEventListener('resize', () => setTimeout(draw, 120));
+  window.addEventListener('orientationchange', () => setTimeout(draw, 320));
+  setInterval(draw, 1500);
+}
+
 /* =========================================================================
    11 · 启动
    ========================================================================= */
@@ -3413,6 +3551,7 @@ function boot() {
   renderShelf();
   if (DB.books.length && getBook(PREFS.lastBook)) toast('上次写到《' + getBook(PREFS.lastBook).title + '》', '');
   initPWA();
+  initDiag();
 }
 boot();
 </script>
